@@ -4,7 +4,7 @@ This package is a [Python Speech Features](https://github.com/jameslyons/python_
 
 ![Speedup Plot](/readme_plot/plot.jpg)
 
-The performance of 3 most important functions were tested on signals of length 500,000 which is approximately 30 seconds. Let's take the speed of original implementation as baseline, the vertical axis shows the speed gain; the 
+The performance of the 3 most important functions, namely `mfcc`, `ssc` and `delta`, were tested on signals of length 500,000 which is approximately 30 seconds. Let's take the speed of original implementation as baseline (i.e $`2^0`$), the vertical axis tells the speed gain; the horizontal axis signifies the batch size that is the number of sequences processed together as one batch.
 
 ## Get Started
 
