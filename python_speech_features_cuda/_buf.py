@@ -6,15 +6,15 @@ Created on Sun Aug  2 06:54:47 2020
 
 from ._env import env
 
-# package global buffer class
+# package buffer class
 class _Buf:
     
     def __init__(self):
         
-        self._hmp_np_32 = {'bnk': dict(), 'dct_mat': dict(), 'dct_scl': dict(), 'lft': dict()}
-        self._hmp_np_64 = {'bnk': dict(), 'dct_mat': dict(), 'dct_scl': dict(), 'lft': dict()}
-        self._hmp_cp_32 = {'bnk': dict(), 'dct_mat': dict(), 'dct_scl': dict(), 'lft': dict()}
-        self._hmp_cp_64 = {'bnk': dict(), 'dct_mat': dict(), 'dct_scl': dict(), 'lft': dict()}    
+        self._hmp_np_32 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
+        self._hmp_np_64 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
+        self._hmp_cp_32 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
+        self._hmp_cp_64 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
     
     
     @property

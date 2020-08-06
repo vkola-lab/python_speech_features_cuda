@@ -6,9 +6,7 @@ Created on Sun Aug  2 07:29:34 2020
 @author: cxue2
 """
 
-from ._misc import _reshape
 from ._misc import _env_consistency_check
-from ._misc import _err_msg_0
 from ._env  import env
 from ._buf  import buf
 
@@ -23,16 +21,16 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
          nfft=None, lowfreq=0, highfreq=None, preemph=.97, ceplifter=22,
          appendEnergy=True, winfunc=None):
 
-    # compute log mel filter bank energy
+    # compute log mel filter bank spectrogram
     tmp, eng = logfbank(sig, samplerate, winlen, winstep, nfilt, nfft,
                         lowfreq, highfreq, preemph, winfunc)
     
     # DCT
-    tmp @= _dct_mat_type_2(nfilt).T
-    tmp *= _dct_scl_type_2(nfilt)
+    tmp = tmp @ _dct_mat_type_2(nfilt).T
+    tmp = tmp * _dct_scl_type_2(nfilt)
     
     # truncate cepstral coefficients
-    tmp = tmp[:,:numcep]
+    tmp = tmp[...,:numcep]
     
     # apply lifter
     tmp = lifter(tmp)
@@ -50,8 +48,8 @@ def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     tmp = preemphasis(sig, coeff=preemph)
     
     # split signals into frames
-    frm_len = int(samplerate * winlen)
-    frm_stp = int(samplerate * winstep)
+    frm_len = int(np.round(samplerate * winlen))
+    frm_stp = int(np.round(samplerate * winstep))
     tmp = framesig(tmp, frm_len, frm_stp, winfunc=winfunc)
     
     # compute power spectrum
@@ -61,7 +59,7 @@ def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     # total energy
     eng = env.backend.sum(tmp, axis=-1)
     
-    # compute mel filter bank energy
+    # apply mel filter bank
     bnk = get_filterbanks(samplerate, nfilt, nfft, lowfreq, highfreq)
     tmp = tmp @ bnk.T
     
@@ -71,14 +69,14 @@ def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
 def logfbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
              nfft=None, lowfreq=0, highfreq=None, preemph=.97, winfunc=None):
     
-    # compute mel filter bank energy
+    # compute mel filter bank spectrogram
     tmp, eng = fbank(sig, samplerate, winlen, winstep, nfilt, nfft, lowfreq,
                      highfreq, preemph, winfunc)
     
     # numerical stability for log
     eps = env.backend.finfo(env.dtype).eps
-    tmp[tmp <= eps] = eps
-    eng[eng <= eps] = eps
+    tmp = env.backend.where(tmp == 0, eps, tmp)
+    eng = env.backend.where(eng == 0, eps, eng)
     
     return env.backend.log(tmp), env.backend.log(eng)
 
@@ -92,23 +90,28 @@ def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     tmp = preemphasis(sig, preemph)
     
     # split signals into frames
-    frm_len = int(samplerate * winlen)
-    frm_stp = int(samplerate * winstep)
+    frm_len = int(np.round(samplerate * winlen))
+    frm_stp = int(np.round(samplerate * winstep))
     tmp = framesig(tmp, frm_len, frm_stp, winfunc=winfunc)
     
     # calculate power spectrum
     psp = powspec(tmp, nfft)
     eps = env.backend.finfo(env.dtype).eps
-    psp[psp <= eps] = eps
+    psp = env.backend.where(psp == 0, eps, psp)
     
-    # compute mel filter bank energy
+    # apply mel filter bank
     bnk = get_filterbanks(samplerate, nfilt, nfft, lowfreq, highfreq)
-    tmp = tmp @ bnk.T
+    fea = psp @ bnk.T
+    
+    vec = env.backend.linspace(1, samplerate/2, psp.shape[-1])
+    tmp = (psp * vec) @ bnk.T / fea
+    
+    return tmp
 
 
 def hz2mel(hz_):
     
-    assert _env_consistency_check(hz_) or isinstance(hz_, (int, float)), 'Invalid input.'
+    _env_consistency_check(hz_)
     
     return 2595. * env.backend.log10(1. + hz_ / 700.)
 
@@ -120,7 +123,7 @@ def _hz2mel(hz_):
 
 def mel2hz(mel):
     
-    assert _env_consistency_check(mel) or isinstance(mel, (int, float)), 'Invalid input.'
+    _env_consistency_check(mel)
     
     return 700. * (10. ** (mel / 2595.0) - 1.)
 
@@ -178,15 +181,35 @@ def get_filterbanks(samplerate=16000, nfilt=26, nfft=512, lowfreq=0, highfreq=No
 
 def lifter(cep, ceplifter=22):
     
-    assert _env_consistency_check(cep), _err_msg_0
+    _env_consistency_check(cep)
     
     return cep * _lifter(cep.shape[-1], ceplifter) if ceplifter > 0 else cep        
 
 
-def delta(fea, N):
+def delta(fea, n=2):
     
-    pass
-
+    assert np.issubdtype(type(n), np.int) and n > 0, 'n must be an integer greater than 0.'
+    
+    # delta feature placeholder
+    dlt = env.backend.zeros_like(fea)
+    
+    # computation loop
+    for i in range(-n, n+1):
+        
+        if i < 0:
+            dlt[...,-i:,:] += fea[...,:i,:] * i
+            
+        elif i > 0:
+            dlt[...,:-i,:] += fea[...,i:,:] * i
+        
+        else:
+            continue
+    
+    # divide by 2 times the square sum of 1, ..., n
+    dlt /= 2 * np.sum(np.arange(1, n+1) ** 2, dtype=env.dtype)
+           
+    return dlt
+    
 
 def _lifter(numcep, ceplifter):
     
@@ -243,7 +266,7 @@ def _dct_scl_type_2(nfilt):
         pass
     
     # placeholder for dct scale
-    vec = np.zeros((nfilt,), dtype=env.dtype)  # for orthogonal transformation
+    vec = np.zeros((nfilt,))  # for orthogonal transformation
     
     # construct dct scale
     vec[0]  = np.sqrt(1 / 4 / nfilt)

@@ -4,8 +4,8 @@ Created on Fri Jul 31 17:10:55 2020
 @author: cxue2
 """
 
-import os
 from types import ModuleType
+
 
 # control package environment variables   
 class _Env:
@@ -15,6 +15,7 @@ class _Env:
         self._backend = None
         self._dtype = None
         self._is_cupy_available = None
+        self._padding = None
         
         # import numpy
         import numpy as np
@@ -27,24 +28,14 @@ class _Env:
         except ImportError:
             self._is_cupy_available = False 
         
-        # assign environment variable: backend
-        try:
-            assert os.environ['PSF_BACKEND'] in ('cupy', 'numpy')
-            if os.environ['PSF_BACKEND'] == 'numpy': self._is_cupy_available = False
-        
-        except KeyError:  # if os.environ['PSF_BACKEND'] is not set
-            os.environ['PSF_BACKEND'] = 'cupy' if self._is_cupy_available else 'numpy'
-            
+        # assign environment variable: backend            
         self._backend = cp if self._is_cupy_available else np
         
         # assign environment variable: dtype
-        try:
-            assert os.environ['PSF_DTYPE'] in ('float32', 'float64')
-            self._dtype = np.float32 if os.environ['PSF_DTYPE'] == 'float32' else np.float64
-            
-        except KeyError:  # if os.environ['PSF_DTYPE'] is not set
-            os.environ['PSF_DTYPE'] = 'float32'
-            self._dtype = np.float32
+        self._dtype = np.float64
+        
+        # assign pad
+        self._padding = True
             
     
     @property
@@ -62,7 +53,6 @@ class _Env:
         
         # set
         self._backend = be
-        os.environ['PSF_BACKEND'] = be.__name__
         
     
     @property
@@ -80,13 +70,28 @@ class _Env:
         
         # set
         self._dtype = dt
-        os.environ['PSF_DTYPE'] = dt.__name__
         
     
     @property
     def is_cupy_available(self):
         
         return self._is_cupy_available
+    
+    
+    @property
+    def padding(self):
+        
+        return self._padding
+    
+    
+    @padding.setter
+    def padding(self, pd):
+        
+        # assertions
+        assert type(pd) is bool, 'padding needs to be a boolean value.'
+        
+        # set
+        self._padding = pd
         
     
 env = _Env()     

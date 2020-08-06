@@ -12,61 +12,26 @@ import numpy as np
 # import cupy if available
 if env.is_cupy_available:
     import cupy as cp
-    
-
-_err_msg_0 = 'The backend type and the data type of input array must ' + \
-             'exactly match the pakage environment settings.'
-
-
-def _reshape(arr, copy=False):
-    '''
-    Reshape the input array.
-
-    Parameters
-    ----------
-    arr : array_like of shape ([B0, ..., Bn,] L)
-        Input array.
-    copy : boolean, optional
-        Copy input array if True.
-
-    Returns
-    -------
-    array_like of shape ([B0 * ... * Bn,] L)
-        A reshaped copy of the input array. If the input array is 1D, an extra
-        dimension will be appended to the left.
-    tuple
-        The original shape of the input array.
-    '''
-    
-    # input array
-    arr_ = env.backend.array(arr, copy=True) if copy else arr
-    
-    # reshape
-    arr_ = arr_.reshape(-1, arr_.shape[-1])
-    
-    return arr_
 
 
 def _env_consistency_check(arr):
 
     # backend check
     if env.is_cupy_available and env.backend is cp and type(arr) is cp.core.core.ndarray:
-        flg = True
+        pass
     
     elif env.backend is np and type(arr) is np.ndarray:
-        flg = True
+        pass
         
     else:
-        flg = False
-    
-    # return immediately if backend check fails
-    if not flg: return flg
+        msg = 'The input array is {} while the backend is set to be <{}>.'.format(type(arr), env.backend.__name__)
+        raise TypeError(msg)
+
         
     # dtype check
     if arr.dtype.type is env.dtype:
-        flg = True
+        pass
         
     else:
-        flg = False
-    
-    return flg
+        msg = 'The dtype of the input array is <{}> while the environment dtype is set to be <{}>.'.format(arr.dtype.type.__name__, env.dtype.__name__)
+        raise TypeError(msg)
