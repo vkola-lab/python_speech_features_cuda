@@ -37,8 +37,22 @@ All changes are made around the point of performance gain.
 
 ### Intermediate result buffer
 
-Intermediate results (e.g. Mel filterbank and DCT matrix) can be buffered to avoid duplicated computation as long as all parameters remain the same. It is possibly the major reason why this implementation is still faster on CPU.
+Intermediate results (e.g. Mel filterbank and DCT matrix) can be buffered to avoid duplicated computation when all parameters remain the same. It is possibly the major reason why this implementation is still faster on CPU.
 
 ### Batch process
 
-The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance in theory due to cache-miss issue. However, GPU is another story that only if you letting it process as many signals as possible at once can unleash its power of parallelism. Here, you can call functions with multiple sequences as a batch ndarray whose preceding dimensions are batch dimensions.
+The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to cache-miss issue in practice. However, GPU is another story that only if you letting it process as many signals as possible at once can unleash its power of parallelism. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
+
+### Strict floating-point control
+
+Numerical data subtype is almost transparent to Python coders, but it is necessarily explict for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. 32 or 64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
+
+### API changes
+
+The API is kept almost the same except that sub-module `sigproc` is removed. All functions previously under `sigproc` can now be accessed at the package root level. This is to adopt the 'pythonic' idea of 'flat is better than nested.'
+
+A few funtion argument names may also be changed to make them appear more unified. For example, `NFFT` and `nfft` are both changed to `nfft`, although you will not notice that if arguments are passed in positional manner.
+
+## Authors
+
+* **Chonghua Xue**, cxue2@bu.edu - Kolachalama laboratory, Boston University School of Medicine
