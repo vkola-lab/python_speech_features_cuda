@@ -43,7 +43,7 @@ Intermediate results (e.g. Mel filterbank and DCT matrix) can be buffered to avo
 
 ### Batch process
 
-The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to curse of cache-miss in practice. However, GPU is another story that only if you letting it process as many signals as possible at once can unleash its power of parallelism. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
+The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to the curse of cache-miss in practice. However, GPU is another story that, roughly speaking, only if you letting it process as many signals as possible at once can unleash its power of parallelism. As you can see from the plot above, GPU code has consistent performance gain as the batch size increases. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
 
 ### Strict floating-point control
 
