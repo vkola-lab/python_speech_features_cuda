@@ -15,7 +15,6 @@ class _Env:
         self._backend = None
         self._dtype = None
         self._is_cupy_available = None
-        self._padding = None
         
         # import numpy
         import numpy as np
@@ -33,9 +32,6 @@ class _Env:
         
         # assign environment variable: dtype
         self._dtype = np.float64
-        
-        # assign pad
-        self._padding = True
             
     
     @property

@@ -46,16 +46,19 @@ def framesig(sig, frame_len, frame_step, winfunc=None):
         
     else:
         n_frm = 1
-        
-    # zero padding
-    p_len = int((n_frm - 1) * frame_step + frame_len)
-    pad_w = ((0, 0),) * (len(sig.shape) - 1) + ((0, p_len - sig.shape[-1]),)
-    tmp = env.backend.pad(sig, pad_w)
     
     # strided split
-    shp = tmp.shape[:-1] + (n_frm, frame_len)
-    std = tmp.strides[:-1] + (tmp.strides[-1] * frame_step, tmp.strides[-1])
-    tmp = env.backend.lib.stride_tricks.as_strided(tmp, shape=shp, strides=std)
+    shp = sig.shape[:-1] + (n_frm, frame_len)
+    std = sig.strides[:-1] + (sig.strides[-1] * frame_step, sig.strides[-1])
+    tmp = env.backend.lib.stride_tricks.as_strided(sig, shape=shp, strides=std)
+    
+    # copy is necessary since stride_tricks returns a view
+    # If the user accidentally operates the array inplace, the result will be unexpected.
+    tmp = env.backend.copy(tmp)
+    
+    # assign 0 to overflowed bytes
+    idx = (n_frm - 1) * frame_step + frame_len - sig.shape[-1]
+    tmp[...,-1,-idx:] = 0
     
     # apply winfunc
     if winfunc is not None:

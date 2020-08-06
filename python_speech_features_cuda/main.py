@@ -103,7 +103,7 @@ def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     bnk = get_filterbanks(samplerate, nfilt, nfft, lowfreq, highfreq)
     fea = psp @ bnk.T
     
-    vec = env.backend.linspace(1, samplerate/2, psp.shape[-1])
+    vec = env.backend.linspace(1, samplerate/2, psp.shape[-1], dtype=env.dtype)
     tmp = (psp * vec) @ bnk.T / fea
     
     return tmp
