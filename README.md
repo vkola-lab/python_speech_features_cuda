@@ -10,7 +10,7 @@ The performance of the 3 most important functions, namely `mfcc`, `ssc` and `del
 
 This section will walk us through the installation and prerequisites.
 
-### Dependencies
+#### Dependencies
 
 The package was developed on the following dependencies:
 
@@ -19,7 +19,7 @@ The package was developed on the following dependencies:
 
 Please note that the dependencies may require Python 3.7 or greater. It is recommended to install and maintain all packages using [`conda`](https://www.anaconda.com/) or [`pip`](https://pypi.org/project/pip/). To install CuPy, additional effort is needed to get CUDA mounted. Please check the official websites of [CUDA](https://developer.nvidia.com/cuda-downloads) for detailed instructions. Also, since this package only uses the most generic functions that are expected to be invariant through dependencies' versions, it will possibly be working well even with lower versions.
 
-### Installation
+#### Installation
 
 To install from [PyPI](https://pypi.org/project/python-speech-features-cuda/):
 
@@ -37,19 +37,19 @@ pip install git+git://github.com/vkola-lab/python_speech_features_cuda
 
 All changes are made around the point of performance gain.
 
-### Intermediate result buffer
+#### Intermediate result buffer
 
 Intermediate results (e.g. Mel filterbank and DCT matrix) can be buffered to avoid duplicated computation when all parameters remain the same. It is possibly the major reason why this implementation is still faster on CPU.
 
-### Batch process
+#### Batch process
 
 The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to the curse of cache-miss in practice. However, GPU is another story that, roughly speaking, only if we letting it process as many signals as possible at once can unleash its power of parallelism. As we can see from the plot above, GPU code has consistent performance gain as the batch size increases. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
 
-### Strict floating-point control
+#### Strict floating-point control
 
 Numerical data subtype is almost transparent to Python coders, but it is necessarily explicit for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. 32 or 64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
 
-### API changes
+#### API changes
 
 The API is kept almost the same except that sub-module `sigproc` is removed. All functions previously under `sigproc` can now be accessed at the package root level. This is to adopt the 'pythonic' principle of 'flat is better than nested.'
 
@@ -66,7 +66,7 @@ print(psf.env.backend.__name__)  # >>> cupy
 print(psf.env.dtype.__name__)    # >>> float64
 ```
 
-By default, the backend will be set to CuPy and the the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy automatically during package initialization.
+By default, the backend will be set to CuPy and the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy automatically at package initialization stage.
 
 #### Change backend and floating-point type
 
@@ -110,7 +110,7 @@ fea = psf.mfcc(sig, nfft=512, winfunc=win)
 print(fea.shape)  # >>> (4, 3124, 13)
 ```
 
-Window function (e.g. `hamming`) has only one degree of freedom that is window/frame length. Since window length doesn't change oftenly in most senarios, it is not necessary to calculate it over and over again at each call. Here, a constant vector is passed instead of a function. This API change is consistent with the idea of buffer.
+Window function (e.g. `hamming`) has only one degree of freedom that is window/frame length. Since window length doesn't change oftenly in most senarios, it is not necessary to calculate it over and over again at each call. This API change is consistent with the idea of buffering.
 
 #### Interoperability
 
