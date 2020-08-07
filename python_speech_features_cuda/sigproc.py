@@ -33,10 +33,9 @@ def framesig(sig, frame_len, frame_step, winfunc=None):
     
     _env_consistency_check(sig)
     
-    # check for winfunc
-    assert winfunc is None or _env_consistency_check(winfunc), 'Invalid winfunc type.'
-    
+    # check for winfunc    
     if winfunc is not None:
+        _env_consistency_check(winfunc)
         assert len(winfunc.shape) == 1, 'winfunc must be an 1-D array.'
         assert winfunc.shape[0] == frame_len, 'winfunc length shall be consistent with frame length.'
     
