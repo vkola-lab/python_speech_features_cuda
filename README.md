@@ -8,7 +8,7 @@ The performance of the 3 most important functions, namely `mfcc`, `ssc` and `del
 
 ## Get Started
 
-This section will walk you through the installation and prerequisites.
+This section will walk us through the installation and prerequisites.
 
 ### Dependencies
 
@@ -43,7 +43,7 @@ Intermediate results (e.g. Mel filterbank and DCT matrix) can be buffered to avo
 
 ### Batch process
 
-The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to the curse of cache-miss in practice. However, GPU is another story that, roughly speaking, only if you letting it process as many signals as possible at once can unleash its power of parallelism. As you can see from the plot above, GPU code has consistent performance gain as the batch size increases. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
+The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to the curse of cache-miss in practice. However, GPU is another story that, roughly speaking, only if we letting it process as many signals as possible at once can unleash its power of parallelism. As we can see from the plot above, GPU code has consistent performance gain as the batch size increases. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
 
 ### Strict floating-point control
 
@@ -53,7 +53,68 @@ Numerical data subtype is almost transparent to Python coders, but it is necessa
 
 The API is kept almost the same except that sub-module `sigproc` is removed. All functions previously under `sigproc` can now be accessed at the package root level. This is to adopt the 'pythonic' principle of 'flat is better than nested.'
 
-A few function argument names may also be changed to make them appear more unified. For example, `NFFT` and `nfft` are both changed to `nfft`, although you will not notice that if arguments are passed in positional manner.
+A few function argument names may also be changed to make them appear more unified. For example, `NFFT` and `nfft` are both changed to `nfft`, although we will not notice that if arguments are passed in positional manner.
+
+## Examples
+
+#### Import, then check backend and floating-point type
+
+```python
+import python_speech_features_cuda as psf
+
+print(psf.env.backend.__name__)  # >>> cupy
+print(psf.env.dtype.__name__)    # >>> float64
+```
+
+By default, the backend will be set to CuPy and the the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy automatically during package initialization.
+
+#### Change backend and floating-point type
+
+```python
+import numpy as np
+
+psf.env.backend = np
+psf.env.dtype = np.float64
+
+print(psf.env.backend.__name__)  # >>> numpy
+print(psf.env.dtype.__name__)    # >>> float32
+```
+
+#### Call MFCC()
+
+```python
+# initialize a batch of 4 signals of length 500,000 each
+sig = psf.env.backend.random.rand(4, 500000, dtype=psf.env.dtype)
+
+# apply MFCC
+fea = psf.mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13,
+               nfilt=26, nfft=None, lowfreq=0, highfreq=None, preemph=.97,
+               ceplifter=22, appendEnergy=True, winfunc=None)
+
+print(fea.shape)  # >>> (4, 3124, 13)
+```
+
+Please note that the input array MUST be consistent with the package enviroment in terms of backend and dtype. If our raw data is loaded in different format, use `psf.env.backend.asarray(..., dtype=psf.env.dtype)` for conversion.
+
+#### Call MFCC() with nontrivial window
+
+```python
+# calculate window function (vector)
+samplerate, winlen = 16000, .025
+win_len = int(np.round(samplerate * winlen))
+win = psf.env.backend.hamming(win_len).astype(psf.env.dtype)
+
+# apply MFCC
+fea = psf.mfcc(sig, nfft=512, winfunc=win)
+
+print(fea.shape)  # >>> (4, 3124, 13)
+```
+
+Window function (e.g. `hamming`) has only one degree of freedom that is window/frame length. Since window length doesn't change oftenly in most senarios, it is not necessary to calculate it over and over again at each call. Here, a constant vector is passed instead of a function. This API change is consistent with the idea of buffer.
+
+#### Interoperability
+
+If we are using CuPy as the backend, then all function outputs are CuPy ndarray stored on GPU memory. Assume the very next stop of the CuPy ndarray is another GPU function but provided by other package/library (e.g. PyTorch, Numba), we can simply pass the memory 'pointer' instead of suffering the huge overhead of GPU->RAM->GPU transfer. Please check this CuPy documentation [page](https://docs.cupy.dev/en/stable/reference/interoperability.html) for details.
 
 ## Authors
 
