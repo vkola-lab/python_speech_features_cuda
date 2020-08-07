@@ -8,7 +8,7 @@ import setuptools
 
 setuptools.setup(
     name='python_speech_features_cuda',
-    version='0.0.8',
+    version='0.0.10',
     author='Chonghua Xue',
     author_email='cxue2@bu.edu',
     url='https://github.com/vkola-lab/python_speech_features_cuda',

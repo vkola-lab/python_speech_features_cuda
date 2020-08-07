@@ -34,8 +34,8 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
     winstep : float, optional
         Step between successive frames (in seconds). The default is .01.
     numcep : int, optional
-        Number of cepstral coefficients to return.
-        They are counted from the 0th. The default is 13.
+        Number of cepstral coefficients to return. They are counted from the
+        0th. The default is 13.
     nfilt : int, optional
         Number of filters in the Mel-filterbank. The default is 26.
     nfft : int, optional
@@ -55,8 +55,8 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
         Parameter for the liftering applied to the final cepstral coefficients.
         0 is equivalent to no liftering. The default is 22.
     appendEnergy : boolean, optional
-        If the value is true, the zeroth cepstral coefficient is replaced with
-        the log of the total frame energy. The default is True.
+        If the value is true, the 0th cepstral coefficient is replaced with the
+        log of the total frame energy. The default is True.
     winfunc : array_like of shape (frame_length,), optional
         The analysis window applied to each frame. The default is None.
 
@@ -168,10 +168,7 @@ def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     array_like of shape ([B0, ..., Bn,] #_of_frames, nfilt)
         Spectral Subband Centroid features for each frame.
     '''
-    
-    lowfreq  = lowfreq or 0
-    highfreq = highfreq or samplerate/2
-    
+
     # preemphasis
     tmp = preemphasis(sig, preemph)
     
@@ -268,6 +265,7 @@ def get_filterbanks(samplerate=16000, nfilt=26, nfft=512, lowfreq=None, highfreq
         pass
     
     # validate high frequence
+    lowfreq = lowfreq or 0
     highfreq = highfreq or samplerate / 2
     assert highfreq <= samplerate / 2, 'highfreq is greater than samplerate/2'
     
