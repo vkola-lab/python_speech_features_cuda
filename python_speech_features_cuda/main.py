@@ -18,8 +18,53 @@ import numpy as np
 
 
 def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
-         nfft=None, lowfreq=0, highfreq=None, preemph=.97, ceplifter=22,
+         nfft=None, lowfreq=None, highfreq=None, preemph=.97, ceplifter=22,
          appendEnergy=True, winfunc=None):
+    '''
+    Extract MFCC features from the input signals.
+
+    Parameters
+    ----------
+    sig : array_like of shape ([B0, ..., Bn,] signal_length)
+        Input signals.
+    samplerate : float, optional
+        Sampling rate of the signal (in Hz). The default is 16000.
+    winlen : float, optional
+        Length of the frame (in seconds). The default is .025.
+    winstep : float, optional
+        Step between successive frames (in seconds). The default is .01.
+    numcep : int, optional
+        Number of cepstral coefficients to return.
+        They are counted from the 0th. The default is 13.
+    nfilt : int, optional
+        Number of filters in the Mel-filterbank. The default is 26.
+    nfft : int, optional
+        FFT length. If None is given, the length is assumed to be equal to the
+        number of samples in a frame that is int(round(samplerate * winlen).
+        The default is None.
+    lowfreq : float, optional
+        Lower bound of Mel-filterbank (in Hz). If None is given, the value will
+        be assumed to be 0. The default is None.
+    highfreq : float, optional
+        Upper bound of Mel-filterbank (in Hz). If None is given, the value will
+        be assumed to be samplerate / 2.  The default is None.
+    preemph : float, optional
+        Parameter for pre-emphasis filtering. Setting this value to 0 is
+        equivalent to no filtering. The default is .97.
+    ceplifter : float, optional
+        Parameter for the liftering applied to the final cepstral coefficients.
+        0 is equivalent to no liftering. The default is 22.
+    appendEnergy : boolean, optional
+        If the value is true, the zeroth cepstral coefficient is replaced with
+        the log of the total frame energy. The default is True.
+    winfunc : array_like of shape (frame_length,), optional
+        The analysis window applied to each frame. The default is None.
+
+    Returns
+    -------
+    array_like of shape ([B0, ..., Bn,] #_of_frames, numcep)
+        MFCC features of the input signals.
+    '''
 
     # compute log mel filter bank spectrogram
     tmp, eng = logfbank(sig, samplerate, winlen, winstep, nfilt, nfft,
@@ -33,7 +78,7 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
     tmp = tmp[...,:numcep]
     
     # apply lifter
-    tmp = lifter(tmp)
+    tmp = lifter(tmp, ceplifter)
     
     # replace first cepstral coefficient with log of frame energy
     if appendEnergy: tmp[...,0] = eng
@@ -42,7 +87,21 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
 
 
 def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26, 
-          nfft=None, lowfreq=0, highfreq=None, preemph=.97, winfunc=None):
+          nfft=None, lowfreq=None, highfreq=None, preemph=.97, winfunc=None):
+    '''
+    Compute Mel-filterbank energies from the input signals.
+
+    Parameters
+    ----------
+    (Check the description of mfcc() for details)
+
+    Returns
+    -------
+    array_like of shape ([B0, ..., Bn,] #_of_frames, nfilt)
+        Mel-filterbank energies for each frame.
+    array_like of shape ([B0, ..., Bn,] #_of_frames)
+        Total energies for each frame.
+    '''
     
     # preemphasis
     tmp = preemphasis(sig, coeff=preemph)
@@ -67,7 +126,21 @@ def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
 
 
 def logfbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
-             nfft=None, lowfreq=0, highfreq=None, preemph=.97, winfunc=None):
+             nfft=None, lowfreq=None, highfreq=None, preemph=.97, winfunc=None):
+    '''
+    Compute log Mel-filterbank energies from the input signals.
+
+    Parameters
+    ----------
+    (Check the description of mfcc() for details)
+
+    Returns
+    -------
+    array_like of shape ([B0, ..., Bn,] #_of_frames, nfilt)
+        Log Mel-filterbank energies for each frame.
+    array_like of shape ([B0, ..., Bn,] #_of_frames)
+        Log total energies for each frame.
+    '''
     
     # compute mel filter bank spectrogram
     tmp, eng = fbank(sig, samplerate, winlen, winstep, nfilt, nfft, lowfreq,
@@ -82,8 +155,21 @@ def logfbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
 
 
 def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
-        nfft=None, lowfreq=0, highfreq=None, preemph=.97, winfunc=None):
+        nfft=None, lowfreq=None, highfreq=None, preemph=.97, winfunc=None):
+    '''
+    Compute Spectral Subband Centroid features from the input signals.
+
+    Parameters
+    ----------
+    (Check the description of mfcc() for details)
+
+    Returns
+    -------
+    array_like of shape ([B0, ..., Bn,] #_of_frames, nfilt)
+        Spectral Subband Centroid features for each frame.
+    '''
     
+    lowfreq  = lowfreq or 0
     highfreq = highfreq or samplerate/2
     
     # preemphasis
@@ -110,6 +196,19 @@ def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
 
 
 def hz2mel(hz_):
+    '''
+    Convert values in Hz to Mel.
+
+    Parameters
+    ----------
+    hz_ : array_like of any shape
+        Values in Hz.
+
+    Returns
+    -------
+    array_like of shape same to the input
+        Values in Mel.
+    '''
     
     _env_consistency_check(hz_)
     
@@ -122,6 +221,19 @@ def _hz2mel(hz_):
 
 
 def mel2hz(mel):
+    '''
+    Convert values in Mel to Hz.
+
+    Parameters
+    ----------
+    hz_ : array_like of any shape
+        Values in Mel.
+
+    Returns
+    -------
+    array_like of shape same to the input
+        Values in Hz.
+    '''
     
     _env_consistency_check(mel)
     
@@ -133,7 +245,20 @@ def _mel2hz(mel):
     return 700. * (10. ** (mel / 2595.0) - 1.)
 
 
-def get_filterbanks(samplerate=16000, nfilt=26, nfft=512, lowfreq=0, highfreq=None):
+def get_filterbanks(samplerate=16000, nfilt=26, nfft=512, lowfreq=None, highfreq=None):
+    '''
+    Compute a Mel-filterbank. If a filterbank has been computered before, the
+    buffered result will be returned instead.
+
+    Parameters
+    ----------
+    (Check the description of mfcc() for details)
+
+    Returns
+    -------
+    array_like of shape (nfilt, nfft//2+1)
+        Mel-filterbank.
+    '''
     
     # look up buffer
     key = (samplerate, nfilt, nfft, lowfreq, highfreq)
@@ -180,6 +305,23 @@ def get_filterbanks(samplerate=16000, nfilt=26, nfft=512, lowfreq=0, highfreq=No
 
 
 def lifter(cep, ceplifter=22):
+    '''
+    Apply a lifter the the matrix of cepstra. This has the effect of increasing
+    the magnitude of the high frequency DCT coefficients.
+
+    Parameters
+    ----------
+    cep : array_like of shape ([B0, ..., Bn,] #_of_frames, numcep)
+        Cepstral coefficients for each frame.
+    ceplifter : float, optional
+        Parameter for the liftering applied to the final cepstral coefficients.
+        0 is equivalent to no liftering. The default is 22.
+
+    Returns
+    -------
+    array_like of shape ([B0, ..., Bn,] #_of_frames, numcep)
+        Cepstral coefficients after liftering.
+    '''
     
     _env_consistency_check(cep)
     
@@ -187,6 +329,21 @@ def lifter(cep, ceplifter=22):
 
 
 def delta(fea, n=2):
+    '''
+    Compute delta features.
+
+    Parameters
+    ----------
+    fea : array_like of shape ([B0, ..., Bn,] #_of_frames, feature_length)
+        Input features.
+    n : int, optional
+        Number of neighbor frames. The default is 2.
+
+    Returns
+    -------
+    array_like of shape ([B0, ..., Bn,] #_of_frames, feature_length)
+        Delta features.
+    '''
     
     assert np.issubdtype(type(n), np.int) and n > 0, 'n must be an integer greater than 0.'
     
@@ -212,6 +369,19 @@ def delta(fea, n=2):
     
 
 def _lifter(numcep, ceplifter):
+    '''
+    Compute a lifter. If a lifter has been computered before, the buffered
+    result will be returned instead.
+
+    Parameters
+    ----------
+    (Check the description of mfcc() for details)
+
+    Returns
+    -------
+    array_like of shape (numcep,)
+        Lifter vector.
+    '''
     
     # look up buffer
     key = (numcep, ceplifter)
@@ -233,6 +403,20 @@ def _lifter(numcep, ceplifter):
 
 
 def _dct_mat_type_2(nfilt):
+    '''
+    Compute a type-2 DCT matrix. If a matrix has been computered before, the
+    buffered result will be returned instead.
+
+    Parameters
+    ----------
+    nfilt : int
+        DCT length.
+
+    Returns
+    -------
+    array_like of shape (nfilt, nfilt)
+        Type-2 DCT matrix.
+    '''
     
     # look up buffer
     try:
@@ -258,6 +442,20 @@ def _dct_mat_type_2(nfilt):
 
 
 def _dct_scl_type_2(nfilt):
+    '''
+    Compute a type-2 DCT scaling vector. If a vector has been computered
+    before, the buffered result will be returned instead.
+
+    Parameters
+    ----------
+    nfilt : int
+        DCT length.
+
+    Returns
+    -------
+    array_like of shape (nfilt,)
+        Type-2 DCT scaling vector.
+    '''
     
     # look up buffer
     try:
