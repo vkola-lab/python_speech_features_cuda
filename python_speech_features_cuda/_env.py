@@ -15,6 +15,7 @@ class _Env:
         self._backend = None
         self._dtype = None
         self._is_cupy_available = None
+        self._is_numba_available = None
         
         # import numpy
         import numpy as np
@@ -25,7 +26,16 @@ class _Env:
             self._is_cupy_available = True
             
         except ImportError:
-            self._is_cupy_available = False 
+            self._is_cupy_available = False
+            
+        # is numba available
+        try:
+            import numba
+            del numba
+            self._is_numba_available = True
+            
+        except ImportError:
+            self._is_numba_available = False 
         
         # assign environment variable: backend            
         self._backend = cp if self._is_cupy_available else np
@@ -72,6 +82,12 @@ class _Env:
     def is_cupy_available(self):
         
         return self._is_cupy_available
+    
+    
+    @property
+    def is_numba_available(self):
+        
+        return self._is_numba_available
     
     
     @property
