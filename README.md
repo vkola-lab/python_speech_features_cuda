@@ -10,7 +10,7 @@ The performance of the 3 most important functions, namely `mfcc`, `ssc` and `del
 
 This section will walk us through the installation and prerequisites.
 
-### Dependencies
+#### Dependencies
 
 The package was developed on the following dependencies:
 
@@ -19,7 +19,7 @@ The package was developed on the following dependencies:
 
 Please note that the dependencies may require Python 3.7 or greater. It is recommended to install and maintain all packages using [`conda`](https://www.anaconda.com/) or [`pip`](https://pypi.org/project/pip/). To install CuPy, additional effort is needed to get CUDA mounted. Please check the official websites of [CUDA](https://developer.nvidia.com/cuda-downloads) for detailed instructions. Also, since this package only uses the most generic functions that are expected to be invariant through dependencies' versions, it will possibly be working well even with lower versions.
 
-### Installation
+#### Installation
 
 To install from [PyPI](https://pypi.org/project/python-speech-features-cuda/):
 
