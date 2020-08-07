@@ -1,6 +1,6 @@
 # Python Speech Features CUDA
 
-This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) reimplementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x2) over the original implementation using reworked NumPy code.
+This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) reimplementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x2) by using reworked NumPy code.
 
 ![Speedup Plot](/readme_plot/plot.jpg)
 
