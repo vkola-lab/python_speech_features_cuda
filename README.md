@@ -66,7 +66,7 @@ print(psf.env.backend.__name__)  # >>> cupy
 print(psf.env.dtype.__name__)    # >>> float64
 ```
 
-By default, the backend will be set to CuPy and the the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy automatically during package initialization.
+By default, the backend will be set to CuPy and the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy automatically at package initialization stage.
 
 #### Change backend and floating-point type
 
@@ -110,7 +110,7 @@ fea = psf.mfcc(sig, nfft=512, winfunc=win)
 print(fea.shape)  # >>> (4, 3124, 13)
 ```
 
-Window function (e.g. `hamming`) has only one degree of freedom that is window/frame length. Since window length doesn't change oftenly in most senarios, it is not necessary to calculate it over and over again at each call. Here, a constant vector is passed instead of a function. This API change is consistent with the idea of buffer.
+Window function (e.g. `hamming`) has only one degree of freedom that is window/frame length. Since window length doesn't change oftenly in most senarios, it is not necessary to calculate it over and over again at each call. This API change is consistent with the idea of buffering.
 
 #### Interoperability
 
