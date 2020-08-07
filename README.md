@@ -37,19 +37,19 @@ pip install git+git://github.com/vkola-lab/python_speech_features_cuda
 
 All changes are made around the point of performance gain.
 
-### Intermediate result buffer
+#### Intermediate result buffer
 
 Intermediate results (e.g. Mel filterbank and DCT matrix) can be buffered to avoid duplicated computation when all parameters remain the same. It is possibly the major reason why this implementation is still faster on CPU.
 
-### Batch process
+#### Batch process
 
 The original implementation can process only one signal sequence at a time. Of course, it is a sufficient manner within CPU-only environment, overly vectorizing NumPy code is actually harmful to the performance due to the curse of cache-miss in practice. However, GPU is another story that, roughly speaking, only if we letting it process as many signals as possible at once can unleash its power of parallelism. As we can see from the plot above, GPU code has consistent performance gain as the batch size increases. Here, functions can be fed with multiple sequences as a batch `ndarray` whose preceding dimensions are batch dimensions.
 
-### Strict floating-point control
+#### Strict floating-point control
 
 Numerical data subtype is almost transparent to Python coders, but it is necessarily explicit for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. 32 or 64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
 
-### API changes
+#### API changes
 
 The API is kept almost the same except that sub-module `sigproc` is removed. All functions previously under `sigproc` can now be accessed at the package root level. This is to adopt the 'pythonic' principle of 'flat is better than nested.'
 
