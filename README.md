@@ -47,13 +47,13 @@ The original implementation can process only one signal sequence at a time. Of c
 
 ### Strict floating-point control
 
-Numerical data subtype is almost transparent to Python coders, but it is necessarily explict for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. 32 or 64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
+Numerical data subtype is almost transparent to Python coders, but it is necessarily explicit for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. 32 or 64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
 
 ### API changes
 
-The API is kept almost the same except that sub-module `sigproc` is removed. All functions previously under `sigproc` can now be accessed at the package root level. This is to adopt the 'pythonic' idea of 'flat is better than nested.'
+The API is kept almost the same except that sub-module `sigproc` is removed. All functions previously under `sigproc` can now be accessed at the package root level. This is to adopt the 'pythonic' principle of 'flat is better than nested.'
 
-A few funtion argument names may also be changed to make them appear more unified. For example, `NFFT` and `nfft` are both changed to `nfft`, although you will not notice that if arguments are passed in positional manner.
+A few function argument names may also be changed to make them appear more unified. For example, `NFFT` and `nfft` are both changed to `nfft`, although you will not notice that if arguments are passed in positional manner.
 
 ## Authors
 
