@@ -11,28 +11,22 @@ class _Buf:
     
     def __init__(self):
         
-        self._hmp_np_32 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
-        self._hmp_np_64 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
-        self._hmp_cp_32 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
-        self._hmp_cp_64 = {'bnk': {}, 'dct_mat': {}, 'dct_scl': {}, 'lft': {}}
-    
-    
-    @property
-    def hmp(self):
+        self._hmp = {}
         
-        if env.backend.__name__ == 'cupy' and env.dtype.__name__ == 'float32':
-            return self._hmp_cp_32
         
-        elif env.backend.__name__ == 'cupy' and env.dtype.__name__ == 'float64':
-            return self._hmp_cp_64
+    def __getitem__(self, key):
         
-        elif env.backend.__name__ == 'numpy' and env.dtype.__name__ == 'float32':
-            return self._hmp_np_32
+        # get environment flags as key
+        key_env = env.flags
         
-        elif env.backend.__name__ == 'numpy' and env.dtype.__name__ == 'float64':
-            return self._hmp_np_64
-    
+        # initialize hash map
+        if key_env not in self._hmp:
+            self._hmp[key_env] = {'bnk': {}, 'fft_obj': {}, 'dct_mat': {},
+                                  'dct_scl': {}, 'lft': {}}
         
+        return self._hmp[key_env][key]
+     
+
     def reset(self):
         
         self.__init__()

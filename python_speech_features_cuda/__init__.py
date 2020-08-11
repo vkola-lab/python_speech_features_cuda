@@ -22,3 +22,5 @@ from .main import lifter
 from .main import mel2hz
 from .main import hz2mel
 from .main import delta
+
+from . import _acc

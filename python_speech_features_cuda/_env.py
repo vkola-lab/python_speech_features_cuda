@@ -5,6 +5,7 @@ Created on Fri Jul 31 17:10:55 2020
 """
 
 from types import ModuleType
+from multiprocessing import cpu_count
 
 
 # control package environment variables   
@@ -13,35 +14,48 @@ class _Env:
     def __init__(self):
         
         self._backend = None
+        self._np = None  # for numpy package
+        self._cp = None  # for cupy package
+        self._nb = None  # for numba package
+        self._fw = None  # for pyfftw package
         self._dtype = None
-        self._is_cupy_available = None
-        self._is_numba_available = None
         
-        # import numpy
+        self._use_nb = True
+        self._use_fw = True
+        
+        # import numpy (must be available)
         import numpy as np
+        self._np = np
         
         # is cupy available
         try:
             import cupy as cp
-            self._is_cupy_available = True
+            self._cp = cp
             
         except ImportError:
-            self._is_cupy_available = False
+            pass
             
         # is numba available
         try:
             import numba
-            del numba
-            self._is_numba_available = True
+            self._nb = numba
             
         except ImportError:
-            self._is_numba_available = False 
-        
+            pass
+            
+        # is pyfftw available
+        try:
+            import pyfftw
+            self._fw = pyfftw
+            
+        except ImportError:
+            pass
+
         # assign environment variable: backend            
-        self._backend = cp if self._is_cupy_available else np
+        self._backend = self._cp or self._np
         
         # assign environment variable: dtype
-        self._dtype = np.float64
+        self._dtype = self._np.float64
             
     
     @property
@@ -54,7 +68,7 @@ class _Env:
     def backend(self, be):
         
         # assertions
-        assert isinstance(be, ModuleType), 'The backend to assign needs to be a module.'
+        assert isinstance(be, ModuleType), 'The backend needs to be a module.'
         assert be.__name__ in ('cupy', 'numpy'), 'Only numpy or cupy can be assigned.'
         
         # set
@@ -71,39 +85,105 @@ class _Env:
     def dtype(self, dt):
         
         # assertions
-        assert type(dt) is type, 'dtype needs to be a type object.'
-        assert dt.__name__ in ('float32', 'float64'), 'Only float32 or float64 is supported.'
+        assert dt in (self.np.float32, self.np.float64), \
+            'Only numpy.float32 or numpy.float64 is supported.'
         
         # set
         self._dtype = dt
         
     
     @property
+    def np(self):
+        
+        return self._np
+    
+    
+    @property
+    def cp(self):
+        
+        return self._cp
+    
+    
+    @property
+    def nb(self):
+        
+        return self._nb
+    
+    
+    @property
+    def fw(self):
+        
+        return self._fw
+        
+    
+    @property
     def is_cupy_available(self):
         
-        return self._is_cupy_available
+        return self._cp is not None
     
     
     @property
     def is_numba_available(self):
         
-        return self._is_numba_available
+        return self._nb is not None
     
     
     @property
-    def padding(self):
+    def is_pyfftw_available(self):
         
-        return self._padding
+        return self._fw is not None
     
     
-    @padding.setter
-    def padding(self, pd):
+    @property
+    def use_numba(self):
         
-        # assertions
-        assert type(pd) is bool, 'padding needs to be a boolean value.'
+        return self._use_nb and self.is_numba_available and self.backend.__name__ == 'numpy'
+    
+    
+    @use_numba.setter
+    def use_numba(self, val):
         
-        # set
-        self._padding = pd
+        assert type(val) is bool
+        self._use_nb = val
+    
+    
+    @property
+    def use_pyfftw(self):
         
+        return self._use_fw and self.is_pyfftw_available and self.backend.__name__ == 'numpy'
+    
+    
+    @use_pyfftw.setter
+    def use_pyfftw(self, val):
+        
+        assert type(val) is bool
+        self._use_fw = val
+    
+    
+    @property
+    def n_cpus(self):
+        
+        return cpu_count()
+    
+        
+    @property
+    def flags(self):
+        ''' For package buffer. '''
+        
+        flg = 0
+        
+        if self.backend.__name__ == 'cupy': flg += 1
+        flg <<= 1
+        
+        if self.use_numba: flg += 1
+        flg <<= 1
+        
+        if self.use_pyfftw: flg += 1
+        flg <<= 1
+        
+        if self.dtype is self.np.float64: flg += 1
+        
+        return flg
+ 
     
 env = _Env()     

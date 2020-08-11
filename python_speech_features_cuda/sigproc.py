@@ -6,8 +6,9 @@ Created on Sun Aug  2 21:37:17 2020
 
 from ._misc import _env_consistency_check
 from ._env  import env
+from . import _acc
 
-import numpy as np
+from math import ceil
              
 
 def framesig(sig, frame_len, frame_step, winfunc=None):
@@ -41,7 +42,7 @@ def framesig(sig, frame_len, frame_step, winfunc=None):
     
     # calculate number of frames
     if sig.shape[-1] > frame_len:
-        n_frm = 1 + int(np.ceil((sig.shape[-1] - frame_len) / frame_step))
+        n_frm = 1 + ceil((sig.shape[-1] - frame_len) / frame_step)
         
     else:
         n_frm = 1
@@ -52,7 +53,7 @@ def framesig(sig, frame_len, frame_step, winfunc=None):
     tmp = env.backend.lib.stride_tricks.as_strided(sig, shape=shp, strides=std)
     
     # copy is necessary since stride_tricks returns a view
-    # If the user accidentally operates the array inplace, the result will be unexpected.
+    # If an user accidentally operates the array inplace, the result will be unexpected.
     tmp = env.backend.copy(tmp)
     
     # assign 0 to overflowed bytes
@@ -118,7 +119,7 @@ def powspec(sig, nfft=None):
     
     # apply FFT
     nfft = nfft or sig.shape[-1]
-    tmp = env.backend.fft.rfft(sig, nfft)
+    tmp = _acc.fft(sig, nfft)
     
     # compute power spectrum (un-normalized)
     tmp = env.backend.real(tmp * tmp.conj())
