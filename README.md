@@ -26,7 +26,7 @@ Optional dependencies:
 1. [pyFFTW](https://pypi.org/project/pyFFTW/) (0.12)
 2. [Numba](http://numba.pydata.org/) (0.50)
 
-These packages are the powerhouse for CPU based computation. If available, they will be auto-detected and loaded during the intialization stage. Of course You don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
+These packages are the powerhouse for CPU based computation. If available, they will be auto-detected and loaded during the initialization stage. Of course You don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
 
 #### Installation
 
