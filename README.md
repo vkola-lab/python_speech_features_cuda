@@ -1,10 +1,12 @@
 # Python Speech Features CUDA
 
-This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) re-implementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x2) by using reworked NumPy code.
+This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) re-implementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x10) by utilizing multi-core CPU, optimizing RAM usage etc.
 
 ![Speedup Plot](/readme_plot/plot.jpg)
 
-The performance of the 3 most important functions, namely `mfcc`, `ssc` and `delta`, were tested on signals of length 500,000 which is approximately 30 seconds. Let's take the speed of original implementation as baseline (i.e <img src="https://render.githubusercontent.com/render/math?math=2^0">), the vertical axis tells the speed gain; the horizontal axis signifies the batch size that is the number of sequences processed together as one batch. It is clear to see that the acceleration is universal whichever the backend is NumPy (CPU) or CuPy (CUDA GPU), although the advantage of GPU is way more significant. Please also note the astonishing performance of `delta` function is due to a reworked logic.
+The performance of the 3 most important functions, namely `mfcc`, `ssc` and `delta`, were tested on random signals of length 500,000 which are approximately 30 seconds each. Let's take the speed of original implementation as baseline (i.e <img src="https://render.githubusercontent.com/render/math?math=2^0">), the vertical axis tells the speed gain; the horizontal axis signifies the batch size. It is clear to see that the acceleration is universal whichever the backend is NumPy (CPU) or CuPy (CUDA GPU), although the advantage of GPU is way more significant. Please also note the astonishing performance of `delta` function is due to a reworked logic.
+
+Note that the benchmark was run on a system of Intel 8700K (6-core) and NVIDIA GTX 1080Ti, the acutal performance may vary on different settings.
 
 ## Get Started
 
@@ -14,10 +16,17 @@ This section will walk us through the installation and prerequisites.
 
 The package was developed on the following dependencies:
 
-1. NumPy (1.19 or greater).
-2. CuPy (7.6 or greater).
+1. [NumPy](https://numpy.org/) (1.19 or greater).
+2. [CuPy](https://cupy.dev/) (7.6 or greater).
 
 Please note that the dependencies may require Python 3.7 or greater. It is recommended to install and maintain all packages using [`conda`](https://www.anaconda.com/) or [`pip`](https://pypi.org/project/pip/). To install CuPy, additional effort is needed to get CUDA mounted. Please check the official websites of [CUDA](https://developer.nvidia.com/cuda-downloads) for detailed instructions. Also, since this package only uses the most generic functions that are expected to be invariant through dependencies' versions, it will possibly be working well even with lower versions.
+
+Optional dependencies:
+
+1. [pyFFTW](https://pypi.org/project/pyFFTW/) (0.12)
+2. [Numba](http://numba.pydata.org/) (0.50)
+
+These packages are the powerhouse for CPU based computation. If available, they will be auto-detected and loaded during the intialization stage. Of course You don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
 
 #### Installation
 
