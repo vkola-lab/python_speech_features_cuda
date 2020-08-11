@@ -83,7 +83,7 @@ By default, the backend will be set to CuPy and the data type `float64`. If CuPy
 import numpy as np
 
 psf.env.backend = np
-psf.env.dtype = np.float64
+psf.env.dtype = np.float32
 
 print(psf.env.backend.__name__)  # >>> numpy
 print(psf.env.dtype.__name__)    # >>> float32
