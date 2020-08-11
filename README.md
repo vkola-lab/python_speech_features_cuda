@@ -1,10 +1,10 @@
 # Python Speech Features CUDA
 
-This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) reimplementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x2) by using reworked NumPy code.
+This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) re-implementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x2) by using reworked NumPy code.
 
 ![Speedup Plot](/readme_plot/plot.jpg)
 
-The performance of the 3 most important functions, namely `mfcc`, `ssc` and `delta`, were tested on signals of length 500,000 which is approximately 30 seconds. Let's take the speed of original implementation as baseline (i.e <img src="https://render.githubusercontent.com/render/math?math=2^0">), the vertical axis tells the speed gain; the horizontal axis signifies the batch size that is the number of sequences processed together as one batch. It is clear to see that the acceleration is universal no matter what the backend is NumPy (CPU) or CuPy (CUDA GPU), although GPU is way more significant. Please also note the astonishing performance of `delta` function is due to a reworked logic.
+The performance of the 3 most important functions, namely `mfcc`, `ssc` and `delta`, were tested on signals of length 500,000 which is approximately 30 seconds. Let's take the speed of original implementation as baseline (i.e <img src="https://render.githubusercontent.com/render/math?math=2^0">), the vertical axis tells the speed gain; the horizontal axis signifies the batch size that is the number of sequences processed together as one batch. It is clear to see that the acceleration is universal whichever the backend is NumPy (CPU) or CuPy (CUDA GPU), although the advantage of GPU is way more significant. Please also note the astonishing performance of `delta` function is due to a reworked logic.
 
 ## Get Started
 
