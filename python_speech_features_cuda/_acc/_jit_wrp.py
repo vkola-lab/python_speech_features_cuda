@@ -4,25 +4,31 @@ Created on Mon Aug 10 18:26:54 2020
 @author: cxue2
 """
 
-from .._misc import _env_consistency_check
+from .._env import _env_consistency_check
 from .._env import env
 
-from ._jit import _jit_preemp_frmsig
-from ._jit import _jit_powdiv
 from ._fft import fft
+
+if env.is_numba_available:
+    from ._jit import _jit_preemp_frmsig
+    from ._jit import _jit_powdiv
+else:
+    _jit_preemp_frmsig = None
+    _jit_powdiv        = None
 
 from math import ceil
 
 
-def _preemp_frmsig_powspc(in_, frm_len, frm_stp, preemph, win, nfft):
+def preemp_frmsig_powspc(in_, frm_len, frm_stp, preemph, win, nfft):
     
+    assert nfft is None or nfft >= frm_len, 'nfft must be greater than or equal to frame length.'
     _env_consistency_check(in_)
     
     # validate window function if given
     if win is not None:
         _env_consistency_check(win)
         assert len(win.shape) == 1, 'winfunc must be an 1-D array.'
-        assert win.shape[0] == frm_len, 'winfunc length shall be consistent with frame length.'
+        assert len(win) == frm_len, 'winfunc length shall be consistent with frame length.'
     
     # defualt window function (all 1s)
     else:

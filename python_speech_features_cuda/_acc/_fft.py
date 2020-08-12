@@ -7,8 +7,6 @@ Created on Sun Aug  9 15:38:41 2020
 from .._env import env
 from .._buf import buf
 
-from math import ceil
-
 
 class _FFT():    
     
@@ -59,7 +57,7 @@ class _FFT():
             out = env.fw.empty_aligned(shp[:-1] + (nfft//2+1,), dtype='complex128')
             
         # construct fft object
-        obj = env.fw.FFTW(in_, out, flags=['FFTW_MEASURE'], threads=ceil(env.n_cpus/2))
+        obj = env.fw.FFTW(in_, out, flags=['FFTW_MEASURE'], threads=env.n_threads)
         
         # reset input placeholder to 0s
         obj.input_array[:] = 0

@@ -5,13 +5,12 @@ Created on Fri Jul 31 17:10:55 2020
 """
 
 from types import ModuleType
-from multiprocessing import cpu_count
 
 
 # control package environment variables   
 class _Env:
     
-    def __init__(self):
+    def __init__(self):        
         
         self._backend = None
         self._np = None  # for numpy package
@@ -22,6 +21,10 @@ class _Env:
         
         self._use_nb = True
         self._use_fw = True
+        
+        from multiprocessing import cpu_count
+        from math import ceil
+        self._n_threads = ceil(cpu_count() / 2)
         
         # import numpy (must be available)
         import numpy as np
@@ -37,6 +40,10 @@ class _Env:
             
         # is numba available
         try:
+            # set number of threads for numba
+            import os
+            os.environ['NUMBA_NUM_THREADS'] = str(self._n_threads)
+            
             import numba
             self._nb = numba
             
@@ -161,9 +168,9 @@ class _Env:
     
     
     @property
-    def n_cpus(self):
+    def n_threads(self):
         
-        return cpu_count()
+        return self._n_threads
     
         
     @property
@@ -186,4 +193,26 @@ class _Env:
         return flg
  
     
-env = _Env()     
+env = _Env()
+
+
+def _env_consistency_check(arr):
+
+    # backend check
+    if env.backend is env.cp and type(arr) is env.cp.core.core.ndarray:
+        pass
+    
+    elif env.backend is env.np and type(arr) is env.np.ndarray:
+        pass
+        
+    else:
+        msg = 'The input array is {} while the backend is set to be <{}>.'.format(type(arr), env.backend.__name__)
+        raise TypeError(msg)
+        
+    # dtype check
+    if arr.dtype.type is env.dtype:
+        pass
+        
+    else:
+        msg = 'The dtype of the input array is <{}> while the environment dtype is set to be <{}>.'.format(arr.dtype.type.__name__, env.dtype.__name__)
+        raise TypeError(msg)    

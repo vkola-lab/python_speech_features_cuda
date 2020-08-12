@@ -4,8 +4,8 @@ Created on Sun Aug  2 21:37:17 2020
 @author: cxue2
 """
 
-from ._misc import _env_consistency_check
-from ._env  import env
+from ._env import _env_consistency_check
+from ._env import env
 from . import _acc
 
 from math import ceil
@@ -35,10 +35,10 @@ def framesig(sig, frame_len, frame_step, winfunc=None):
     _env_consistency_check(sig)
     
     # check for winfunc    
-    if winfunc is not None:
+    if winfunc is not None: 
         _env_consistency_check(winfunc)
         assert len(winfunc.shape) == 1, 'winfunc must be an 1-D array.'
-        assert winfunc.shape[0] == frame_len, 'winfunc length shall be consistent with frame length.'
+        assert len(winfunc) == frame_len, 'winfunc length shall be consistent with frame length.'
     
     # calculate number of frames
     if sig.shape[-1] > frame_len:
@@ -85,10 +85,19 @@ def magspec(sig, nfft=None):
     array_like of shape ([B0, ..., Bn,] nfft//2+1)
         The magnitude spectrum of the input signals.
     '''
-
-    # compute power spectrum (un-normalized)
+    
+    assert nfft is None or nfft >= sig.shape[-1], 'nfft must be greater than or equal to frame length.'
+    _env_consistency_check(sig)
+    
+    # apply FFT
     nfft = nfft or sig.shape[-1]
-    tmp = powspec(sig, nfft) * nfft
+    tmp = _acc.fft(sig, nfft)
+    
+    # compute power spectrum (un-normalized)
+    tmp = env.backend.real(tmp * tmp.conj())
+    
+    # cast dtype back since fft may change dtype
+    tmp = tmp.astype(env.dtype, copy=False)
     
     # square root to get magnitude spectrum
     tmp = env.backend.sqrt(tmp)
@@ -115,6 +124,7 @@ def powspec(sig, nfft=None):
         The power spectrum of the input signals.
     '''
     
+    assert nfft is None or nfft >= sig.shape[-1], 'nfft must be greater than or equal to frame length.'
     _env_consistency_check(sig)
     
     # apply FFT
@@ -156,7 +166,6 @@ def logpowspec(sig, nfft=None, norm=True):
     '''
 
     # compute power spectrum
-    nfft = nfft or sig.shape[-1]
     tmp = powspec(sig, nfft)
     
     # eliminate zeros for numerical stability

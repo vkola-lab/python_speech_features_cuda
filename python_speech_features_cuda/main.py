@@ -6,8 +6,8 @@ Created on Sun Aug  2 07:29:34 2020
 @author: cxue2
 """
 
-from ._misc import _env_consistency_check
-from ._env  import env
+from ._env import _env_consistency_check
+from ._env import env
 
 from ._aux import _mel_filterbank
 from ._aux import _dct_mat_type_2
@@ -72,11 +72,11 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
 
     # compute log mel filter bank spectrogram
     tmp, eng = logfbank(sig, samplerate, winlen, winstep, nfilt, nfft,
-                        lowfreq, highfreq, preemph, winfunc)
+                        lowfreq, highfreq, preemph, appendEnergy, winfunc)
     
     # DCT and truncate
     tmp = tmp @ _dct_mat_type_2(nfilt, numcep).T
-    tmp = tmp * _dct_scl_type_2(nfilt, numcep)
+    tmp = _acc.mul(tmp, _dct_scl_type_2(nfilt, numcep))
     
     # apply lifter
     tmp = lifter(tmp, ceplifter)
@@ -88,43 +88,47 @@ def mfcc(sig, samplerate=16000, winlen=.025, winstep=.01, numcep=13, nfilt=26,
 
 
 def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26, 
-          nfft=None, lowfreq=None, highfreq=None, preemph=.97, winfunc=None):
+          nfft=None, lowfreq=None, highfreq=None, preemph=.97,
+          calcEnergy=True, winfunc=None):
     '''
     Compute Mel-filterbank energies from the input signals.
 
     Parameters
     ----------
-    (Check the description of mfcc() for details)
+    calcEnergy : boolean, optional
+        If the value is true, total energies for each frame will be calculated.
+    (Check the description of mfcc() for details)        
 
     Returns
     -------
     array_like of shape ([B0, ..., Bn,] #_of_frames, nfilt)
         Mel-filterbank energies for each frame.
     array_like of shape ([B0, ..., Bn,] #_of_frames)
-        Total energies for each frame.
+        Total energies for each frame. None if calcEnergy is false.
     '''
     
     # convert seconds to number of samples
     frm_len = round(samplerate * winlen)
     frm_stp = round(samplerate * winstep)
     
-    # if numba and pyfftw is both available
-    if env.use_numba and env.use_pyfftw:
-        tmp = _acc._preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
+    # FFT length
+    nfft = nfft or frm_len
+    
+    # if either numba or pyfftw is missing or disabled
+    if not (env.use_numba and env.use_pyfftw):
         
+        # pre-emphasis, framing and power spectra separately
+        tmp = preemphasis(sig, preemph)
+        tmp = framesig(tmp, frm_len, frm_stp, winfunc)
+        tmp = powspec(tmp, nfft)
+    
     else:
-        # preemphasis
-        tmp = preemphasis(sig, coeff=preemph)
         
-        # split signals into frames
-        tmp = framesig(tmp, frm_len, frm_stp, winfunc=winfunc)
-        
-        # compute power spectrum
-        nfft = nfft or frm_len
-        tmp = powspec(tmp, nfft=nfft)
+        # pre-emphasis, framing and power spectra all together
+        tmp = _acc.preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
     
     # total energy
-    eng = env.backend.sum(tmp, axis=-1)
+    eng = _acc.sum(tmp) if calcEnergy else None
     
     # apply mel filter bank
     bnk = _mel_filterbank(samplerate, nfilt, nfft, lowfreq, highfreq)
@@ -134,12 +138,15 @@ def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
 
 
 def logfbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
-             nfft=None, lowfreq=None, highfreq=None, preemph=.97, winfunc=None):
+             nfft=None, lowfreq=None, highfreq=None, preemph=.97,
+             calcEnergy=True, winfunc=None):
     '''
     Compute log Mel-filterbank energies from the input signals.
 
     Parameters
     ----------
+    calcEnergy : boolean, optional
+        If the value is true, total energies for each frame will be calculated.
     (Check the description of mfcc() for details)
 
     Returns
@@ -147,19 +154,19 @@ def logfbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     array_like of shape ([B0, ..., Bn,] #_of_frames, nfilt)
         Log Mel-filterbank energies for each frame.
     array_like of shape ([B0, ..., Bn,] #_of_frames)
-        Log total energies for each frame.
+        Log total energies for each frame. None if calcEnergy is false.
     '''
     
     # compute mel filter bank spectrogram
     tmp, eng = fbank(sig, samplerate, winlen, winstep, nfilt, nfft, lowfreq,
-                     highfreq, preemph, winfunc)
+                     highfreq, preemph, calcEnergy, winfunc)
     
-    # numerical stability for log
+    # compute log
     eps = env.backend.finfo(env.dtype).eps
-    tmp = env.backend.where(tmp == 0, eps, tmp)
-    eng = env.backend.where(eng == 0, eps, eng)
+    tmp = _acc.rplzro_log(tmp, eps, inplace=True)
+    eng = _acc.rplzro_log(eng, eps, inplace=True) if eng is not None else None
     
-    return env.backend.log(tmp), env.backend.log(eng)
+    return tmp, eng
 
 
 def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
@@ -181,32 +188,33 @@ def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     frm_len = round(samplerate * winlen)
     frm_stp = round(samplerate * winstep)
     
-    # if numba and pyfftw is both available
-    if env.use_numba and env.use_pyfftw:
-        psp = _acc._preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
+    # fft length
+    nfft = nfft or frm_len
+    
+    # if either numba or pyfftw is missing or disabled
+    if not (env.use_numba and env.use_pyfftw):
         
+        # pre-emphasis, framing and power spectra separately
+        tmp = preemphasis(sig, preemph)
+        tmp = framesig(tmp, frm_len, frm_stp, winfunc)
+        psp = powspec(tmp, nfft)
+    
     else:
-        # preemphasis
-        tmp = preemphasis(sig, coeff=preemph)
         
-        # split signals into frames
-        tmp = framesig(tmp, frm_len, frm_stp, winfunc=winfunc)
-        
-        # compute power spectrum
-        nfft = nfft or frm_len
-        psp = powspec(tmp, nfft=nfft)
+        # pre-emphasis, framing and power spectra all together
+        psp = _acc.preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
     
-    # apply mel filter bank
+    # compute denominator
     bnk = _mel_filterbank(samplerate, nfilt, nfft, lowfreq, highfreq)
-    fea = psp @ bnk.T
+    dnm = psp @ bnk.T
     
-    # eliminate zeros for mel features/energies
+    # eliminate zeros for denominator
     eps = env.backend.finfo(env.dtype).eps
-    fea = env.backend.where(fea == 0, eps, fea)
+    dnm = env.backend.where(dnm == 0, eps, dnm)
     
     # the last step
     vec = env.backend.linspace(1, samplerate/2, psp.shape[-1], dtype=env.dtype)
-    tmp = (psp * vec) @ bnk.T / fea
+    tmp = (psp * vec) @ bnk.T / dnm
     
     return tmp
 
@@ -290,7 +298,13 @@ def lifter(cep, ceplifter=22):
     
     _env_consistency_check(cep)
     
-    return cep * _lifter(cep.shape[-1], ceplifter) if ceplifter > 0 else cep        
+    if ceplifter > 0:
+        tmp = _acc.mul(cep, _lifter(cep.shape[-1], ceplifter))
+        
+    else:
+        tmp = cep
+    
+    return tmp        
 
 
 def delta(fea, n=2):
@@ -310,6 +324,7 @@ def delta(fea, n=2):
         Delta features.
     '''
     
+    _env_consistency_check(fea)
     assert type(n) is int and n > 0, 'n must be an integer greater than 0.'
     
     # delta feature placeholder

@@ -10,7 +10,7 @@ from ._buf  import buf
 import numpy as np
 
 
-def _mel_filterbank(samplerate=16000, nfilt=26, nfft=512, lowfreq=None, highfreq=None):
+def _mel_filterbank(samplerate, nfilt, nfft, lowfreq, highfreq):
     '''
     Compute a Mel-filterbank. If a filterbank has been computered before, the
     buffered result will be returned instead.
