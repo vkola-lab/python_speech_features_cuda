@@ -10,7 +10,7 @@ Note that the benchmark was run on a system of Intel 8700K (6-core) and NVIDIA G
 
 ## Get Started
 
-This section will walk us through the installation and prerequisites.
+This section will walk you through the installation and prerequisites.
 
 #### Dependencies
 
@@ -26,7 +26,7 @@ Optional dependencies:
 1. [pyFFTW](https://pypi.org/project/pyFFTW/) (0.12)
 2. [Numba](http://numba.pydata.org/) (0.50)
 
-These packages are the powerhouse for CPU based computation. If available, they will be auto-detected and loaded during the initialization stage. Of course You don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
+If available, they will be auto-detected and loaded during the initialization stage. There are a couple of routines defined in the `_acc` sub-module utilizing both packages to greatly enhance the CPU performance. Of course you don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
 
 #### Installation
 
@@ -56,7 +56,7 @@ The original implementation can process only one signal sequence at a time. Of c
 
 #### Strict floating-point control
 
-Numerical data subtype is almost transparent to Python coders, but it is necessarily explicit for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. 32 or 64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
+Numerical data subtype is almost transparent to Python coders, but it is necessarily explicit for GPU programming. In order to constraint floating-point type, this implementation introduces a global 'knob' indicating what floating-point (i.e. FP32 or FP64) is expected; any input `ndarray` needs to be consistent with that or a `TypeError` will be raised.
 
 #### API changes
 
@@ -75,7 +75,7 @@ print(psf.env.backend.__name__)  # >>> cupy
 print(psf.env.dtype.__name__)    # >>> float64
 ```
 
-By default, the backend will be set to CuPy and the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy automatically at package initialization stage.
+By default, the backend will be set to CuPy and the data type `float64`. If CuPy is not found in the environment, then the backend will be switched to NumPy instead at package initialization stage.
 
 #### Change backend and floating-point type
 
@@ -120,6 +120,21 @@ print(fea.shape)  # >>> (4, 3124, 13)
 ```
 
 Window function (e.g. `hamming`) has only one degree of freedom that is window/frame length. Since window length doesn't change oftenly in most senarios, it is not necessary to calculate it over and over again at each call. This API change is consistent with the idea of buffering.
+
+#### Clean buffer
+
+```python
+# reset buffer
+psf.buf.reset()
+```
+
+If the input signals vary a lot in terms of length and batch size, or we want to try multiple combinations of parameters for the optimum, the buffer size can monotonically increase since all intermediate results are stacked. If RAM or GPU memory is filled up, call `reset()` to release.
+
+## Tips
+
+#### Use FP32
+
+FP32 computation is generally faster than FP64 unless a CPU or a GPU offers advanced instruction sets making the gap small. As to the output of MFCC on random signals normalized within (0, 1), the observed precision error is always less than 1e-5 which is definitely tolerable for most applications.
 
 #### Interoperability
 
