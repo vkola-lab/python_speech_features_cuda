@@ -4,22 +4,28 @@ Created on Mon Aug 10 18:26:54 2020
 @author: cxue2
 """
 
-from .._env import _env_consistency_check
-from .._env import env
+from .. import _env_consistency_check
+from .. import env
 
-from ._fft import fft
+from .. import preemphasis
+from .. import framesig
+from .. import powspec
 
-if env.is_numba_available:
-    from ._jit import _jit_preemp_frmsig
-    from ._jit import _jit_powdiv
-else:
-    _jit_preemp_frmsig = None
-    _jit_powdiv        = None
+from . import fft
+from . import _jit_preemp_frmsig
+from . import _jit_powdiv
 
 from math import ceil
 
 
 def preemp_frmsig_powspc(in_, frm_len, frm_stp, preemph, win, nfft):
+    
+    # if either numba or pyfftw is missing or disabled, call default functions
+    if not (env.use_numba and env.use_pyfftw):
+        tmp = preemphasis(in_, preemph)
+        tmp = framesig(tmp, frm_len, frm_stp, win)
+        tmp = powspec(tmp, nfft)
+        return tmp
     
     assert nfft is None or nfft >= frm_len, 'nfft must be greater than or equal to frame length.'
     _env_consistency_check(in_)

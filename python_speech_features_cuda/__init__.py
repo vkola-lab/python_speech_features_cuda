@@ -5,6 +5,8 @@ Created on Fri Jul 31 16:48:31 2020
 """
 
 from ._env import env
+from ._env import _env_consistency_check
+
 from ._buf import buf
 
 from .sigproc import framesig

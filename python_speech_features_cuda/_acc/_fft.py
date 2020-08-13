@@ -4,8 +4,8 @@ Created on Sun Aug  9 15:38:41 2020
 @author: cxue2
 """
 
-from .._env import env
-from .._buf import buf
+from .. import env
+from .. import buf
 
 
 class _FFT():    
@@ -20,7 +20,7 @@ class _FFT():
         
         # call either numpy or cupy's fft function
         else:
-            return env.np.fft.rfft(arr, nfft)
+            return env.backend.fft.rfft(arr, nfft)
 
 
     def _fftw_obj(self, shp, nfft):

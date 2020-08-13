@@ -114,18 +114,8 @@ def fbank(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     # FFT length
     nfft = nfft or frm_len
     
-    # if either numba or pyfftw is missing or disabled
-    if not (env.use_numba and env.use_pyfftw):
-        
-        # pre-emphasis, framing and power spectra separately
-        tmp = preemphasis(sig, preemph)
-        tmp = framesig(tmp, frm_len, frm_stp, winfunc)
-        tmp = powspec(tmp, nfft)
-    
-    else:
-        
-        # pre-emphasis, framing and power spectra all together
-        tmp = _acc.preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
+    # pre-emphasis, framing and power-spectra all together
+    tmp = _acc.preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
     
     # total energy
     eng = _acc.sum(tmp) if calcEnergy else None
@@ -190,19 +180,9 @@ def ssc(sig, samplerate=16000, winlen=.025, winstep=.01, nfilt=26,
     
     # fft length
     nfft = nfft or frm_len
-    
-    # if either numba or pyfftw is missing or disabled
-    if not (env.use_numba and env.use_pyfftw):
         
-        # pre-emphasis, framing and power spectra separately
-        tmp = preemphasis(sig, preemph)
-        tmp = framesig(tmp, frm_len, frm_stp, winfunc)
-        psp = powspec(tmp, nfft)
-    
-    else:
-        
-        # pre-emphasis, framing and power spectra all together
-        psp = _acc.preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
+    # pre-emphasis, framing and power-spectra all together
+    psp = _acc.preemp_frmsig_powspc(sig, frm_len, frm_stp, preemph, winfunc, nfft)
     
     # compute denominator
     bnk = _mel_filterbank(samplerate, nfilt, nfft, lowfreq, highfreq)

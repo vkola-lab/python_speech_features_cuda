@@ -4,18 +4,12 @@ Created on Tue Aug 11 17:02:08 2020
 @author: cxue2
 """
 
-from .._env import env
+from .. import env
 
-if env.is_numba_available:
-    from ._jit import _jit_sum
-    from ._jit import _jit_mul
-    from ._jit import _jit_rplzro_log
-    from ._jit import _jit_rplzro 
-else:
-    _jit_sum        = None
-    _jit_mul        = None
-    _jit_rplzro_log = None
-    _jit_rplzro     = None
+from . import _jit_sum
+from . import _jit_mul
+from . import _jit_rplzro_log
+from . import _jit_rplzro
 
 
 def sum(in_):

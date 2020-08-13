@@ -4,7 +4,7 @@ Created on Mon Aug 10 17:06:13 2020
 @author: cxue2
 """
 
-from .._env import env
+from .. import env
 
 # numba backend
 nb = env.nb
@@ -31,7 +31,7 @@ def _jit_preemp_frmsig(in_, out, cnt, n_frm, frm_len, frm_stp, preemph, win):
                 out[off,0] = in_[0] * win[0]
                 
                 
-@nb.njit(parallel=True, cache=True)
+@nb.njit(parallel=True, cache=True, fastmath=True)
 def _jit_powdiv(in_, out, nfft, fastmath=True):
     
     for i in nb.prange(in_.shape[0]):

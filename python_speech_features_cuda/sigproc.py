@@ -6,7 +6,6 @@ Created on Sun Aug  2 21:37:17 2020
 
 from ._env import _env_consistency_check
 from ._env import env
-from . import _acc
 
 from math import ceil
              
@@ -91,7 +90,7 @@ def magspec(sig, nfft=None):
     
     # apply FFT
     nfft = nfft or sig.shape[-1]
-    tmp = _acc.fft(sig, nfft)
+    tmp = env.backend.fft.rfft(sig, nfft)
     
     # compute power spectrum (un-normalized)
     tmp = env.backend.real(tmp * tmp.conj())
@@ -129,7 +128,7 @@ def powspec(sig, nfft=None):
     
     # apply FFT
     nfft = nfft or sig.shape[-1]
-    tmp = _acc.fft(sig, nfft)
+    tmp = env.backend.fft.rfft(sig, nfft)
     
     # compute power spectrum (un-normalized)
     tmp = env.backend.real(tmp * tmp.conj())
