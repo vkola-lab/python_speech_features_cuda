@@ -28,7 +28,7 @@ Optional dependencies:
 
 If available, they will be auto-detected and loaded during the initialization stage. There are a couple of routines defined in the `_acc` sub-module utilizing both packages to enhance the CPU performance. Of course you don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
 
-For Numba installation, it's highly recommended to build from the project's GitHub repository directly. The framework is getting improved through frenquent iterations. With version 0.52, it can even beat Cython in numerical computation tasks.
+For Numba installation, it's highly recommended to build from the project's GitHub repository directly. The framework is constantly getting improved through frenquent updates. With version 0.52, it can even beat Cython in numerical computation tasks.
 
 ```
 pip install git+git://github.com/numba/numba
