@@ -279,12 +279,10 @@ def lifter(cep, ceplifter=22):
     _env_consistency_check(cep)
     
     if ceplifter > 0:
-        tmp = _acc.mul(cep, _lifter(cep.shape[-1], ceplifter))
+        return _acc.mul(cep, _lifter(cep.shape[-1], ceplifter))
         
     else:
-        tmp = cep
-    
-    return tmp        
+        return cep       
 
 
 def delta(fea, n=2):
