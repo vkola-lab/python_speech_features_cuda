@@ -1,6 +1,6 @@
 # Python Speech Features CUDA
 
-This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) re-implementation that offers up to hundreds of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. roughly x10) by utilizing multi-core CPU, optimizing RAM usage etc.
+This package is a [Python Speech Features](https://github.com/jameslyons/python_speech_features) re-implementation that offers up to tens of times performance boost on CUDA enabled GPUs. The API is designed to be as close as possible to the original implementation such that users may have their existing projects benefited from the acceleration with least modifications to the code. If you do not have the access to a CUDA GPU, this package may also get you a decent speedup (i.e. at least x10) by utilizing multi-core CPU, optimizing RAM usage etc.
 
 ![Speedup Plot](/readme_plot/plot.jpg)
 
@@ -24,9 +24,15 @@ Please note that the dependencies may require Python 3.7 or greater. It is recom
 Optional dependencies:
 
 1. [pyFFTW](https://pypi.org/project/pyFFTW/) (0.12)
-2. [Numba](http://numba.pydata.org/) (0.50)
+2. [Numba](http://numba.pydata.org/) (0.52)
 
-If available, they will be auto-detected and loaded during the initialization stage. There are a couple of routines defined in the `_acc` sub-module utilizing both packages to greatly enhance the CPU performance. Of course you don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
+If available, they will be auto-detected and loaded during the initialization stage. There are a couple of routines defined in the `_acc` sub-module utilizing both packages to enhance the CPU performance. Of course you don't need them if you have a CUDA-enabled GPU and go for CuPy as the backend.
+
+For Numba installation, it's highly recommended to build from the project's GitHub repository directly. The framework is getting improved through frenquent iterations. With version 0.52, it can even beat Cython in numerical computation tasks.
+
+```
+pip install git+git://github.com/numba/numba
+```
 
 #### Installation
 
