@@ -8,7 +8,7 @@ The performance of the 3 most important functions, namely `mfcc`, `ssc` and `del
 
 Note that the benchmark was run on a system of Intel i9-7920X (12-core) and NVIDIA GTX 2080Ti, the acutal performance may vary on different settings.
 
-## Get Started
+## Getting Started
 
 This section will walk you through the installation and prerequisites.
 
