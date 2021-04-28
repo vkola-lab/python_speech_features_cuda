@@ -16,8 +16,8 @@ This section will walk you through the installation and prerequisites.
 
 The package was developed on the following dependencies:
 
-1. [NumPy](https://numpy.org/) (1.19 or greater).
-2. [CuPy](https://cupy.dev/) (7.6 or greater).
+1. [NumPy](https://numpy.org/) (1.19).
+2. [CuPy](https://cupy.dev/) (7.6).
 
 Please note that the dependencies may require Python 3.7 or greater. It is recommended to install and maintain all packages using [`conda`](https://www.anaconda.com/) or [`pip`](https://pypi.org/project/pip/). To install CuPy, additional effort is needed to get CUDA mounted. Please check the official websites of [CUDA](https://developer.nvidia.com/cuda-downloads) for detailed instructions. Also, since this package only uses the most generic functions that are expected to be invariant through dependencies' versions, it will possibly be working well even with lower versions.
 
